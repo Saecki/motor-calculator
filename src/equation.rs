@@ -1,97 +1,55 @@
-use crate::error::ErrorKind::{Overconstrained, Underconstrained};
 use crate::error::Error;
-
-#[derive(Copy, Clone, Debug)]
-pub enum Op {
-    Add,
-    Sub,
-    Mul,
-    Div,
-}
-
-impl Op {
-    pub fn is_add(&self) -> bool {
-        if let Op::Add = self { true } else { false }
-    }
-
-    pub fn is_sub(&self) -> bool {
-        if let Op::Sub = self { true } else { false }
-    }
-
-    pub fn is_mul(&self) -> bool {
-        if let Op::Mul = self { true } else { false }
-    }
-
-    pub fn is_div(&self) -> bool {
-        if let Op::Div = self { true } else { false }
-    }
-
-    pub fn opposite(&self) -> Op {
-        match self {
-            Op::Add => Op::Sub,
-            Op::Sub => Op::Add,
-            Op::Mul => Op::Div,
-            Op::Div => Op::Mul,
-        }
-    }
-
-    pub fn calculated(&self, a: f64, b: f64) -> f64 {
-        match self {
-            Op::Add => a + b,
-            Op::Sub => a - b,
-            Op::Mul => a * b,
-            Op::Div => a / b,
-        }
-    }
-}
+use crate::error::ErrorKind::{Overconstrained, Underconstrained};
+use crate::number::Num;
+use crate::operation::Op;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Equation {
-    operation: Op,
-    a: Option<f64>,
-    b: Option<f64>,
-    c: Option<f64>,
+    pub op: Op,
+    pub a: Num,
+    pub b: Num,
+    pub c: Num,
 }
 
 impl Equation {
-    pub fn new(a: Option<f64>, operation: Op, b: Option<f64>, c: Option<f64>) -> Equation {
-        Equation { operation, a, b, c }
+    pub fn new(a: Num, op: Op, b: Num, c: Num) -> Equation {
+        Equation { op, a, b, c }
     }
 
     pub fn from(a: f64, operation: Op, b: f64) -> Equation {
-        Equation { operation, a: Some(a), b: Some(b), c: None }
+        Equation { op: operation, a: Num::In(a), b: Num::In(b), c: Num::None }
     }
 
-    pub fn solved(&self) -> crate::error::Result<Equation> {
-        let mut calc = *self;
+    pub fn solve(&self) -> crate::error::Result<Equation> {
+        let mut equation = *self;
         let mut commutative = true;
         let mut overconstrained = false;
 
         //normalizing
-        if calc.operation.is_sub() || calc.operation.is_div() {
-            let temp_c = calc.c;
-            calc.c = calc.a;
-            calc.a = temp_c;
-            calc.operation = calc.operation.opposite();
+        if !equation.op.is_commutative() {
+            let temp_c = equation.c;
+            equation.c = equation.a;
+            equation.a = temp_c;
+            equation.op = equation.op.inv();
             commutative = false
         }
 
         //rearrange
-        if let (Some(a), Some(b)) = (calc.a, calc.b) {
-            if calc.c.is_none() {
-                calc.c = Some(calc.operation.calculated(a, b));
+        if equation.a.is_num() && equation.b.is_num() {
+            if equation.c.is_none() {
+                equation.c = Num::Out(equation.op.calc(equation.a.num(), equation.b.num()));
             } else {
                 overconstrained = true;
             };
-        } else if let (Some(a), Some(c)) = (calc.a, calc.c) {
-            if calc.b.is_none() {
-                calc.b = Some(calc.operation.opposite().calculated(c, a));
+        } else if equation.a.is_num() && equation.c.is_num() {
+            if equation.b.is_none() {
+                equation.b = Num::Out(equation.op.inv().calc(equation.c.num(), equation.a.num()));
             } else {
                 overconstrained = true;
             };
-        } else if let (Some(b), Some(c)) = (calc.b, calc.c) {
-            if calc.a.is_none() {
-                calc.a = Some(calc.operation.opposite().calculated(c, b));
+        } else if equation.b.is_num() && equation.c.is_num() {
+            if equation.a.is_none() {
+                equation.a = Num::Out(equation.op.inv().calc(equation.c.num(), equation.b.num()));
             } else {
                 overconstrained = true;
             };
@@ -104,10 +62,10 @@ impl Equation {
 
         //reverting normalization
         if !commutative {
-            let temp_c = calc.c;
-            calc.c = calc.a;
-            calc.a = temp_c;
-            calc.operation = calc.operation.opposite();
+            let temp_c = equation.c;
+            equation.c = equation.a;
+            equation.a = temp_c;
+            equation.op = equation.op.inv();
         }
 
         if overconstrained {
@@ -117,30 +75,103 @@ impl Equation {
             ));
         }
 
-        Ok(calc)
+        Ok(equation)
     }
 }
 
 mod test {
-    use crate::equation::{Equation, Op};
     use rand::Rng;
 
+    use crate::equation::Equation;
+    use crate::error::ErrorKind::Overconstrained;
+    use crate::number::Num;
+    use crate::operation::Op;
+
     #[test]
-    fn test() {
+    fn test_add_equations() {
         let mut rng = rand::thread_rng();
-        let a = rng.gen();
-        let b = rng.gen();
+        let first = rng.gen();
+        let second = rng.gen();
 
-        let equation1 = Equation::from(a, Op::Add, b);
-        assert_eq!(equation1.solved().unwrap().c.unwrap(), a + b);
+        let equation1 = Equation::new(Num::In(first), Op::Add, Num::In(second), Num::None);
+        assert_eq!(equation1.solve().unwrap().c.num(), first + second);
 
-        let equation2 = Equation::from(a, Op::Sub, b);
-        assert_eq!(equation2.solved().unwrap().c.unwrap(), a - b);
+        let equation2 = Equation::new(Num::In(first), Op::Add, Num::None, Num::In(second));
+        assert_eq!(equation2.solve().unwrap().b.num(), second - first);
 
-        let equation3 = Equation::from(a, Op::Mul, b);
-        assert_eq!(equation3.solved().unwrap().c.unwrap(), a * b);
+        let equation3 = Equation::new(Num::None, Op::Add, Num::In(first), Num::In(second));
+        assert_eq!(equation3.solve().unwrap().a.num(), second - first);
 
-        let equation4 = Equation::from(a, Op::Div, b);
-        assert_eq!(equation4.solved().unwrap().c.unwrap(), a / b);
+        let equation4 = Equation::new(Num::In(first), Op::Add, Num::In(first), Num::In(second));
+        match equation4.solve().err().unwrap().kind {
+            Overconstrained => (),
+            _ => panic!("Expected Error with ErrorKind Overconstrained")
+        }
+    }
+
+    #[test]
+    fn test_sub_equations() {
+        let mut rng = rand::thread_rng();
+        let first = rng.gen();
+        let second = rng.gen();
+
+        let equation1 = Equation::new(Num::In(first), Op::Sub, Num::In(second), Num::None);
+        assert_eq!(equation1.solve().unwrap().c.num(), first - second);
+
+        let equation2 = Equation::new(Num::In(first), Op::Sub, Num::None, Num::In(second));
+        assert_eq!(equation2.solve().unwrap().b.num(), first - second);
+
+        let equation3 = Equation::new(Num::None, Op::Sub, Num::In(first), Num::In(second));
+        assert_eq!(equation3.solve().unwrap().a.num(), first + second);
+
+        let equation4 = Equation::new(Num::In(first), Op::Sub, Num::In(first), Num::In(second));
+        match equation4.solve().err().unwrap().kind {
+            Overconstrained => (),
+            _ => panic!("Expected Error with ErrorKind Overconstrained")
+        }
+    }
+
+    #[test]
+    fn test_mul_equations() {
+        let mut rng = rand::thread_rng();
+        let first = rng.gen();
+        let second = rng.gen();
+
+        let equation1 = Equation::new(Num::In(first), Op::Mul, Num::In(second), Num::None);
+        assert_eq!(equation1.solve().unwrap().c.num(), first * second);
+
+        let equation2 = Equation::new(Num::In(first), Op::Mul, Num::None, Num::In(second));
+        assert_eq!(equation2.solve().unwrap().b.num(), second / first);
+
+        let equation3 = Equation::new(Num::None, Op::Mul, Num::In(first), Num::In(second));
+        assert_eq!(equation3.solve().unwrap().a.num(), second / first);
+
+        let equation4 = Equation::new(Num::In(first), Op::Mul, Num::In(first), Num::In(second));
+        match equation4.solve().err().unwrap().kind {
+            Overconstrained => (),
+            _ => panic!("Expected Error with ErrorKind Overconstrained")
+        }
+    }
+
+    #[test]
+    fn test_div_equations() {
+        let mut rng = rand::thread_rng();
+        let first = rng.gen();
+        let second = rng.gen();
+
+        let equation1 = Equation::new(Num::In(first), Op::Div, Num::In(second), Num::None);
+        assert_eq!(equation1.solve().unwrap().c.num(), first / second);
+
+        let equation2 = Equation::new(Num::In(first), Op::Div, Num::None, Num::In(second));
+        assert_eq!(equation2.solve().unwrap().b.num(), first / second);
+
+        let equation3 = Equation::new(Num::None, Op::Div, Num::In(first), Num::In(second));
+        assert_eq!(equation3.solve().unwrap().a.num(), first * second);
+
+        let equation4 = Equation::new(Num::In(first), Op::Div, Num::In(first), Num::In(second));
+        match equation4.solve().err().unwrap().kind {
+            Overconstrained => (),
+            _ => panic!("Expected Error with ErrorKind Overconstrained")
+        }
     }
 }

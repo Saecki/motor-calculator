@@ -9,8 +9,8 @@ pub enum ErrorKind {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Error {
-    kind: ErrorKind,
-    description: &'static str,
+    pub kind: ErrorKind,
+    pub description: &'static str,
 }
 
 impl Error {

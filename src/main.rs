@@ -2,10 +2,12 @@ use yew;
 
 use crate::view::Model;
 
-mod view;
-mod error;
-mod calc;
+mod calculation;
 mod equation;
+mod error;
+mod number;
+mod operation;
+mod view;
 
 fn main() {
     yew::start_app::<Model>();

@@ -58,7 +58,7 @@ impl Component for Model {
                     oninput=self.link.callback(|e: InputData| Msg::Val2(e.value))
                     />
                 <button onclick=self.link.callback(|_| Msg::Add)>{ "+" }</button>
-                <button>{ self.value }</button>
+                <p>{ self.value }</p>
             </div>
         }
     }
