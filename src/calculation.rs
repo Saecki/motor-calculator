@@ -1,24 +1,43 @@
+use std::f64::consts::PI;
+
 use crate::equation::Equation;
-use crate::error::Error;
-use crate::error::ErrorKind::{Overconstrained, Underconstrained};
+use crate::error::ErrorKind::Overconstrained;
 use crate::number::Num;
 use crate::operation::Op;
 
+/// A struct that holds the data necessary for calculations regarding an electrical motor and it's transmission.
 #[derive(Copy, Clone)]
 pub struct Calculation {
-    //motor
-    u: Num,
-    i: Num,
-    r_a: Num,
-    p_in: Num,
-    p_m: Num,
-    p_m_v_el: Num,
-    p_m_v_mech: Num,
-    //gearing
-    p_g: Num,
-    m_g: Num,
-    n_g: Num,
-    p_g_v: Num,
+    // Motor
+    /// Voltage: U [V]
+    pub u: Num,
+    /// Current: I [A]
+    pub i: Num,
+    /// armature resistance: R<sub>A</sub> [Ohm]
+    pub r_a: Num,
+    /// P<sub>in</sub> [W]
+    pub p_in: Num,
+    /// P<sub>M</sub> [W]
+    pub p_m: Num,
+    /// P<sub>MV</sub> [W]
+    pub p_m_v: Num,
+    /// P<sub>MV_el</sub> [W]
+    pub p_m_v_el: Num,
+    /// P<sub>MV_mech</sub> [W]
+    pub p_m_v_mech: Num,
+    /// Motor torque: M<sub>M</sub> [Nm]
+    pub m_m: Num,
+    /// Motor speed: n<sub>M</sub> [rpm]
+    pub n_m: Num,
+    // Transmission
+    /// P<sub>G</sub> [W]
+    pub p_t: Num,
+    /// P<sub>GV</sub> [W]
+    pub p_t_v: Num,
+    /// Transmission torque: M<sub>G</sub> [Nm]
+    pub m_t: Num,
+    /// Transmission speed: n<sub>G</sub> [rpm]
+    pub n_t: Num,
 }
 
 impl Calculation {
@@ -29,36 +48,112 @@ impl Calculation {
             r_a: Num::None,
             p_in: Num::None,
             p_m: Num::None,
+            p_m_v: Num::None,
             p_m_v_el: Num::None,
             p_m_v_mech: Num::None,
-            p_g: Num::None,
-            m_g: Num::None,
-            n_g: Num::None,
-            p_g_v: Num::None,
+            m_m: Num::None,
+            n_m: Num::None,
+            p_t: Num::None,
+            p_t_v: Num::None,
+            m_t: Num::None,
+            n_t: Num::None,
         }
     }
 
     pub fn try_fill_missing(&self) -> crate::error::Result<Calculation> {
-        let calc = self.clear_output();
-        calc.try_fill_missing_motor()
-    }
+        let mut calc = self.clear_output();
 
-    pub fn try_fill_missing_motor(&self) -> crate::error::Result<Calculation> {
-        let mut calc = *self;
-        let mut overconstrained = false;
+        calc.overconstrained()?;
 
-        match Equation::new(calc.u, Op::Mul, calc.i, calc.p_in).solve() {
-            Err(e) => if let Overconstrained = e.kind {
-                return Err(e);
-            }
-            Ok(eq) => {
-                calc.u = eq.a;
-                calc.i = eq.b;
-                calc.p_in = eq.c;
+        for _ in 0..6 {
+            if let Ok(c) = calc.calculate() {
+                calc = c;
             }
         }
 
         Ok(calc)
+    }
+
+    pub fn calculate(&self) -> crate::error::Result<Calculation> {
+        let mut calc = *self;
+
+        if let Ok(eq) = Equation::new(calc.u, Op::Mul, calc.i, calc.p_in).solve() {
+            calc.u = eq.a;
+            calc.i = eq.b;
+            calc.p_in = eq.c;
+        }
+
+        if let Ok(eq) = Equation::new(calc.p_m_v, Op::Add, calc.p_m, calc.p_in).solve() {
+            calc.p_m_v = eq.a;
+            calc.p_m = eq.b;
+            calc.p_in = eq.c;
+        }
+
+        if let Ok(eq) = Equation::new(calc.p_m_v_el, Op::Add, calc.p_m_v_mech, calc.p_m_v).solve() {
+            calc.p_m_v_el = eq.a;
+            calc.p_m_v_mech = eq.b;
+            calc.p_m_v = eq.c;
+        }
+
+        if let Ok(eq) = Equation::new(calc.n_m.mul(2_f64 * PI / 60_f64), Op::Mul, calc.m_m, calc.p_m).solve() {
+            calc.n_m = eq.a.div(2_f64 * PI / 60_f64);
+            calc.m_m = eq.b;
+            calc.p_m = eq.c;
+        }
+
+        if let Ok(eq) = Equation::new(calc.p_t, Op::Add, calc.p_t_v, calc.p_m).solve() {
+            calc.p_t = eq.a;
+            calc.p_t_v = eq.b;
+            calc.p_m = eq.c;
+        }
+
+        if let Ok(eq) = Equation::new(calc.n_t.mul(2_f64 * PI / 60_f64), Op::Mul, calc.m_t, calc.p_t).solve() {
+            calc.n_t = eq.a.div(2_f64 * PI / 60_f64);
+            calc.m_t = eq.b;
+            calc.p_t = eq.c;
+        }
+
+        Ok(calc)
+    }
+
+    pub fn overconstrained(&self) -> crate::error::Result<()> {
+        if let Err(e) = Equation::new(self.u, Op::Mul, self.i, self.p_in).solve() {
+            if let Overconstrained = e.kind {
+                return Err(e);
+            }
+        }
+
+        if let Err(e) = Equation::new(self.p_m_v, Op::Add, self.p_m, self.p_in).solve() {
+            if let Overconstrained = e.kind {
+                return Err(e);
+            }
+        }
+
+        if let Err(e) = Equation::new(self.p_m_v_el, Op::Add, self.p_m_v_mech, self.p_m_v).solve() {
+            if let Overconstrained = e.kind {
+                return Err(e);
+            }
+        }
+
+        if let Err(e) = Equation::new(self.n_m.mul(2_f64 * PI / 60_f64), Op::Mul, self.m_m, self.p_m).solve() {
+            if let Overconstrained = e.kind {
+                return Err(e);
+            }
+        }
+
+        if let Err(e) = Equation::new(self.p_t, Op::Add, self.p_t_v, self.p_m).solve() {
+            if let Overconstrained = e.kind {
+                return Err(e);
+            }
+        }
+
+        if let Err(e) = Equation::new(self.n_t.mul(2_f64 * PI / 60_f64), Op::Mul, self.m_t, self.p_t).solve() {
+            if let Overconstrained = e.kind {
+                return Err(e);
+            }
+        }
+
+        Ok(())
     }
 
     pub fn clear_output(&self) -> Self {
@@ -69,17 +164,21 @@ impl Calculation {
         if calc.r_a.is_output() { calc.r_a = Num::None; }
         if calc.p_in.is_output() { calc.p_in = Num::None; }
         if calc.p_m.is_output() { calc.p_m = Num::None; }
+        if calc.p_m_v.is_output() { calc.p_m_v = Num::None; }
         if calc.p_m_v_el.is_output() { calc.p_m_v_el = Num::None; }
         if calc.p_m_v_mech.is_output() { calc.p_m_v_mech = Num::None; }
-        if calc.p_g.is_output() { calc.p_g = Num::None; }
-        if calc.m_g.is_output() { calc.m_g = Num::None; }
-        if calc.n_g.is_output() { calc.n_g = Num::None; }
-        if calc.p_g_v.is_output() { calc.p_g_v = Num::None; }
+        if calc.m_m.is_output() { calc.m_m = Num::None; }
+        if calc.n_m.is_output() { calc.n_m = Num::None; }
+        if calc.p_t.is_output() { calc.p_t = Num::None; }
+        if calc.p_t_v.is_output() { calc.p_t_v = Num::None; }
+        if calc.m_t.is_output() { calc.m_t = Num::None; }
+        if calc.n_t.is_output() { calc.n_t = Num::None; }
 
         calc
     }
 }
 
+#[cfg(test)]
 mod test {
     use rand::Rng;
 

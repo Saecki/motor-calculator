@@ -1,3 +1,5 @@
+#![recursion_limit = "2048"]
+
 use yew;
 
 use crate::view::Model;

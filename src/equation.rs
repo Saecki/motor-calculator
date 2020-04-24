@@ -16,10 +16,6 @@ impl Equation {
         Equation { op, a, b, c }
     }
 
-    pub fn from(a: f64, operation: Op, b: f64) -> Equation {
-        Equation { op: operation, a: Num::In(a), b: Num::In(b), c: Num::None }
-    }
-
     pub fn solve(&self) -> crate::error::Result<Equation> {
         let mut equation = *self;
         let mut commutative = true;
@@ -79,6 +75,7 @@ impl Equation {
     }
 }
 
+#[cfg(test)]
 mod test {
     use rand::Rng;
 
