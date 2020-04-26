@@ -1,5 +1,9 @@
 # motorcalc
+![CI](https://github.com/Saecki/motorcalc/workflows/CI/badge.svg)
+
 A calculator for electrical motors and their transmissions
+
+[Have a look](https://saecki.github.io/motorcalc/)
 
 ## Testing
 ### 1. Installing Rustup  
