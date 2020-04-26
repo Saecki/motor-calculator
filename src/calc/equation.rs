@@ -1,9 +1,9 @@
+use crate::calc::number::Num;
+use crate::calc::operation::Op;
 use crate::error::Error;
 use crate::error::ErrorKind::{Overconstrained, Underconstrained};
-use crate::number::Num;
-use crate::operation::Op;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Equation {
     pub op: Op,
     pub a: Num,
@@ -79,10 +79,10 @@ impl Equation {
 mod test {
     use rand::Rng;
 
-    use crate::equation::Equation;
+    use crate::calc::equation::Equation;
+    use crate::calc::number::Num;
+    use crate::calc::operation::Op;
     use crate::error::ErrorKind::Overconstrained;
-    use crate::number::Num;
-    use crate::operation::Op;
 
     #[test]
     fn test_add_equations() {

@@ -1,5 +1,5 @@
 [package]
-name = "motor-calculator"
+name = "motorcalc"
 version = "0.1.0"
 authors = ["Saecki"]
 edition = "2018"

@@ -13,7 +13,7 @@ pub struct Error {
 }
 
 impl Error {
-    pub fn new(kind: ErrorKind, description: &'static str) -> Error {
-        Error { kind, description }
+    pub fn new(kind: ErrorKind, description: &'static str) -> Self {
+        Self { kind, description }
     }
 }
