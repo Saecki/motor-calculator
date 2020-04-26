@@ -158,12 +158,15 @@ impl Model {
         html! {
             <div class={ id } >
                 <label for={ id }>{ label }<sub>{ sub_label }</sub>{ format!(" [{}]", unit) }</label>
-                <input type="text"
-                    id={ id }
-                    oninput=self.link.callback(move |e: InputData| msg_type.with(e.value))
-                    disabled={ num.is_output() }
-                    />
-                <span>{ if num.is_output() { num.display() } else { "".into() } }</span>
+                <div class="input-output">
+                    <input class="edit"
+                        type="text"
+                        id={ id }
+                        oninput=self.link.callback(move |e: InputData| msg_type.with(e.value))
+                        disabled={ num.is_output() }
+                        />
+                    <span class="display">{ if num.is_output() { num.display() } else { "".into() } }</span>
+                </div>
             </div>
         }
     }

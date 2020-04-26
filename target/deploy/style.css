@@ -21,14 +21,11 @@ input, label, span {
     width: 150px;
     max-width: 150px;
     min-width: 150px;
+    overflow: hidden;
 }
 
 label {
     font-size: 12px;
-}
-
-input, span {
-    font-size: 14px;
 }
 
 input {
@@ -64,6 +61,17 @@ input:disabled {
     width: 950px;
     margin: auto;
     position: relative;
+}
+
+.input-output {
+    position: relative;
+}
+
+.edit, .display {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 14px;
 }
 
 .p_in {
