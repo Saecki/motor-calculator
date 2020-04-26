@@ -3,6 +3,8 @@
 
 A calculator for electrical motors and their transmissions
 
+[Have a look](https://saecki.github.io/motorcalc/)
+
 ## Testing
 ### 1. Installing Rustup  
 [Instructions](https://rustup.rs/)
