@@ -1,4 +1,6 @@
 # motorcalc
+![CI](https://github.com/Saecki/motorcalc/workflows/CI/badge.svg)
+
 A calculator for electrical motors and their transmissions
 
 ## Testing
