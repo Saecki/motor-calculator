@@ -169,7 +169,6 @@ mod test {
 
     use crate::calc::calculation::Calculation;
     use crate::calc::number::Num;
-    use crate::error::ErrorKind::Overconstrained;
 
     #[test]
     fn test_calculation1() {
@@ -191,14 +190,5 @@ mod test {
         calc3.i = Num::In(first);
         calc3.p_in = Num::In(second);
         assert_eq!(calc3.try_fill_missing().unwrap().u.num(), second / first);
-
-        let mut calc4 = Calculation::new();
-        calc4.u = Num::In(first);
-        calc4.i = Num::In(first);
-        calc4.p_in = Num::In(second);
-        match calc4.try_fill_missing().err().unwrap().kind {
-            Overconstrained => (),
-            _ => panic!("Expected Error with ErrorKind Overconstrained")
-        }
     }
 }
