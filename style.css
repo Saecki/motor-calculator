@@ -18,29 +18,31 @@ input, label, span {
     margin: 0;
     padding: 2px;
     display: block;
-    width: 150px;
-    max-width: 150px;
-    min-width: 150px;
+    width: 160px;
+    max-width: 160px;
+    min-width: 160px;
     overflow: hidden;
 }
 
-label {
-    font-size: 12px;
-}
-
-input {
+input[type=text] {
     border: 0;
     outline: 0;
     background: transparent;
     border-bottom: 2px solid #8b8b8b;
+    transition-duration: .15s;
 }
 
-input:focus {
+input[type=text]:focus {
     border-bottom: 2px solid #dfdfdf;
+    color: #dfdfdf;
 }
 
-input:disabled {
+input[type=text]:disabled {
     border-bottom: 2px solid #c85742;
+}
+
+label {
+    font-size: 12px;
 }
 
 .motorcalc {
@@ -58,7 +60,7 @@ input:disabled {
 }
 
 .calc {
-    width: 950px;
+    width: 960px;
     margin: auto;
     position: relative;
 }
