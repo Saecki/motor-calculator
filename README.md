@@ -6,7 +6,7 @@ A calculator for electrical motors and their transmissions
 [Have a look](https://saecki.github.io/motorcalc/)
 
 ## Features
-- Metric prefixes [n, µ or u, m, k, M, G]
+- Metric prefixes [p, n, µ or u, m, k, M, G, P]
 - Instant calculation
 
 ## Testing

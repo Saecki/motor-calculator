@@ -107,22 +107,85 @@ impl Component for Model {
     }
 
     fn view(&self) -> Html {
-        let u = self.field("u", "U", "", "V", Msg::U("".into()), self.calc.u);
-        let i = self.field("i", "I", "", "A", Msg::I("".into()), self.calc.i);
-        let r_a = self.field("r_a", "R", "A", "Ω", Msg::RA("".into()), self.calc.r_a);
-        let p_in = self.field("p_in", "P", "In", "W", Msg::PIn("".into()), self.calc.p_in);
-        let p_m = self.field("p_m", "P", "M", "W", Msg::PM("".into()), self.calc.p_m);
-        let p_m_l = self.field("p_ml", "P", "ML", "W", Msg::PMV("".into()), self.calc.p_m_l);
-        let p_m_l_el = self.field("p_ml_el", "P", "ML_el", "W", Msg::PMVEl("".into()), self.calc.p_m_l_el);
-        let p_m_l_mech = self.field("p_ml_mech", "P", "ML_mech", "W", Msg::PMVMech("".into()), self.calc.p_m_l_mech);
-        let eta_m = self.field("eta_m", "η", "M", "%", Msg::ETAM("".into()), self.calc.eta_m);
-        let m_m = self.field("m_m", "M", "M", "Nm", Msg::MM("".into()), self.calc.m_m);
-        let n_m = self.field("n_m", "n", "M", "rpm", Msg::NM("".into()), self.calc.n_m);
-        let p_t = self.field("p_t", "P", "T", "W", Msg::PT("".into()), self.calc.p_t);
-        let p_t_l = self.field("p_tl", "P", "TL", "W", Msg::PTV("".into()), self.calc.p_t_l);
-        let eta_t = self.field("eta_t", "η", "T", "%", Msg::ETAT("".into()), self.calc.eta_t);
-        let m_t = self.field("m_t", "M", "T", "Nm", Msg::MT("".into()), self.calc.m_t);
-        let n_t = self.field("n_t", "n", "T", "rpm", Msg::NT("".into()), self.calc.n_t);
+        let u = self.field(
+            "u", "U", "", "V",
+            "Voltage",
+            Msg::U("".into()), self.calc.u);
+
+        let i = self.field(
+            "i", "I", "", "A",
+            "Current",
+            Msg::I("".into()), self.calc.i);
+
+        let r_a = self.field(
+            "r_a", "R", "A", "Ω",
+            "Armature resistance",
+            Msg::RA("".into()), self.calc.r_a);
+
+        let p_in = self.field(
+            "p_in", "P", "In", "W",
+            "Input power",
+            Msg::PIn("".into()), self.calc.p_in);
+
+        let p_m = self.field(
+            "p_m", "P", "M", "W",
+            "Motor power",
+            Msg::PM("".into()), self.calc.p_m);
+
+        let p_m_l = self.field(
+            "p_ml", "P", "ML", "W",
+            "Motor power loss",
+            Msg::PMV("".into()), self.calc.p_m_l);
+
+        let p_m_l_el = self.field(
+            "p_ml_el", "P", "ML_el", "W",
+            "Electrical motor power loss",
+            Msg::PMVEl("".into()), self.calc.p_m_l_el);
+
+        let p_m_l_mech = self.field(
+            "p_ml_mech", "P", "ML_mech", "W",
+            "Mechanical motor power loss",
+            Msg::PMVMech("".into()), self.calc.p_m_l_mech);
+
+        let eta_m = self.field(
+            "eta_m", "η", "M", "%",
+            "Motor efficiency",
+            Msg::ETAM("".into()), self.calc.eta_m);
+
+        let m_m = self.field(
+            "m_m", "M", "M", "Nm",
+            "Motor torque",
+            Msg::MM("".into()), self.calc.m_m);
+
+        let n_m = self.field(
+            "n_m", "n", "M", "rpm",
+            "Motor speed",
+            Msg::NM("".into()), self.calc.n_m);
+
+        let p_t = self.field(
+            "p_t", "P", "T", "W",
+            "Transmission power",
+            Msg::PT("".into()), self.calc.p_t);
+
+        let p_t_l = self.field(
+            "p_tl", "P", "TL", "W",
+            "Transmission power loss",
+            Msg::PTV("".into()), self.calc.p_t_l);
+
+        let eta_t = self.field(
+            "eta_t", "η", "T", "%",
+            "Transmission efficiency",
+            Msg::ETAT("".into()), self.calc.eta_t);
+
+        let m_t = self.field(
+            "m_t", "M", "T", "Nm",
+            "Transmission torque",
+            Msg::MT("".into()), self.calc.m_t);
+
+        let n_t = self.field(
+            "n_t", "n", "T", "rpm",
+            "Transmission speed",
+            Msg::NT("".into()), self.calc.n_t);
 
         html! {
             <div class="motorcalc">
@@ -154,10 +217,13 @@ impl Component for Model {
 }
 
 impl Model {
-    pub fn field(&self, id: &str, label: &str, sub_label: &str, unit: &str, msg_type: Msg, num: Num) -> Html {
+    pub fn field(&self, id: &str, label: &str, sub_label: &str, unit: &str, description: &str, msg_type: Msg, num: Num) -> Html {
         html! {
             <div class={ id } >
-                <label for={ id }>{ label }<sub>{ sub_label }</sub>{ format!(" [{}]", unit) }</label>
+                <label for={ id }
+                    title={ description }>
+                    { label }<sub>{ sub_label }</sub>{ format!(" [{}]", unit) }
+                </label>
                 <div class="input-output">
                     <input class="edit"
                         type="text"
@@ -165,7 +231,7 @@ impl Model {
                         oninput=self.link.callback(move |e: InputData| msg_type.with(e.value))
                         disabled={ num.is_output() }
                         />
-                    <span class="display">{ if num.is_output() { num.display() } else { "".into() } }</span>
+                    <span class="display">{ if num.is_output() { num.display(10) } else { "".into() } }</span>
                 </div>
             </div>
         }

@@ -1,12 +1,15 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-const METRIC_PREFIXES: [(&str, f64); 6] = [
+/// Metric prefix and the factor.
+const METRIC_PREFIXES: [(&str, f64); 8] = [
+    ("p", 0.000_000_000_001),
     ("n", 0.000_000_001),
     ("µu", 0.000_001),
     ("m", 0.001),
     ("k", 1_000.0),
     ("M", 1_000_000.0),
     ("G", 1_000_000_000.0),
+    ("P", 1_000_000_000_000.0),
 ];
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -63,9 +66,27 @@ impl Num {
         }
     }
 
-    pub fn display(&self) -> String {
+    pub fn display(&self, significant_figures: usize) -> String {
         if self.is_num() {
-            format!("{}", self.num())
+            let mut num = self.num();
+            let mut metric_prefix = ' ';
+
+            for m in &METRIC_PREFIXES {
+                if num / m.1 >= 1.0 && num / m.1 < 1000.0 {
+                    num = num / m.1;
+                    metric_prefix = m.0.chars().next().unwrap();
+                    break;
+                }
+            }
+
+            let integer_figures = num.abs().log10().floor() as usize + 1;
+            let floating_figures = if integer_figures > significant_figures {
+                0
+            } else {
+                significant_figures - integer_figures
+            };
+
+            format!("{0:.1$}{2}", num, floating_figures, metric_prefix)
         } else {
             String::new()
         }
@@ -75,11 +96,11 @@ impl Num {
         let mut s = str.into().replace(",", ".");
         let mut factor = 1.0;
 
-        'outer: for ms in &METRIC_PREFIXES {
-            for c in ms.0.chars() {
+        'outer: for m in &METRIC_PREFIXES {
+            for c in m.0.chars() {
                 if s.ends_with(c) {
                     s.pop();
-                    factor = ms.1;
+                    factor = m.1;
                     break 'outer;
                 }
             }
