@@ -18,6 +18,7 @@ pub mod calc {
 pub struct Model {
     pub link: ComponentLink<Self>,
     pub calc: Calculation,
+    pub significant_figures: usize,
 }
 
 #[derive(Clone, Debug)]
@@ -38,6 +39,7 @@ pub enum Msg {
     ETAT(String),
     MT(String),
     NT(String),
+    IT(String),
 }
 
 impl Msg {
@@ -59,6 +61,7 @@ impl Msg {
             Msg::ETAT(_) => Msg::ETAT(str.into()),
             Msg::MT(_) => Msg::MT(str.into()),
             Msg::NT(_) => Msg::NT(str.into()),
+            Msg::IT(_) => Msg::IT(str.into()),
         }
     }
 }
@@ -71,6 +74,7 @@ impl Component for Model {
         Self {
             link,
             calc: Calculation::new(),
+            significant_figures: 10,
         }
     }
 
@@ -92,6 +96,7 @@ impl Component for Model {
             Msg::ETAT(s) => self.calc.eta_t = Num::parse(s),
             Msg::MT(s) => self.calc.m_t = Num::parse(s),
             Msg::NT(s) => self.calc.n_t = Num::parse(s),
+            Msg::IT(s) => self.calc.i_t = Num::parse(s),
         }
 
         if let Ok(c) = self.calc.try_fill_missing() {
@@ -162,6 +167,11 @@ impl Component for Model {
             "Motor speed",
             Msg::NM("".into()), self.calc.n_m);
 
+        let i_t = self.field(
+            "i_t", "i", "", "%",
+            "Transmission ratio",
+            Msg::IT("".into()), self.calc.i_t);
+
         let p_t = self.field(
             "p_t", "P", "T", "W",
             "Transmission power",
@@ -204,6 +214,7 @@ impl Component for Model {
                     { p_m }
                     { m_m }
                     { n_m }
+                    { i_t }
                     { eta_m }
                     { p_t_l }
                     { p_t }
@@ -231,7 +242,7 @@ impl Model {
                         oninput=self.link.callback(move |e: InputData| msg_type.with(e.value))
                         disabled={ num.is_output() }
                         />
-                    <span class="display">{ if num.is_output() { num.display(10) } else { "".into() } }</span>
+                    <span class="display">{ if num.is_output() { num.display(self.significant_figures) } else { "".into() } }</span>
                 </div>
             </div>
         }

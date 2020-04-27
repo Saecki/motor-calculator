@@ -32,6 +32,9 @@ pub struct Calculation {
     /// Motor speed: n<sub>M</sub> [rpm]
     pub n_m: Num,
 
+    /// Transmission ratio: i [%]
+    pub i_t: Num,
+
     // Transmission
     /// Transmission power: P<sub>T</sub> [W]
     pub p_t: Num,
@@ -59,6 +62,7 @@ impl Calculation {
             eta_m: Num::None,
             m_m: Num::None,
             n_m: Num::None,
+            i_t: Num::None,
             p_t: Num::None,
             p_t_l: Num::None,
             eta_t: Num::None,
@@ -136,6 +140,12 @@ impl Calculation {
             calc.p_t = eq.c;
         }
 
+        if let Ok(eq) = Equation::new(calc.n_m, Op::Mul, calc.i_t / 100.0, calc.n_t).solve() {
+            calc.n_m = eq.a;
+            calc.i_t = eq.b * 100.0;
+            calc.n_t = eq.c;
+        }
+
         Ok(calc)
     }
 
@@ -158,6 +168,7 @@ impl Calculation {
         if calc.eta_t.is_output() { calc.eta_t = Num::None; }
         if calc.m_t.is_output() { calc.m_t = Num::None; }
         if calc.n_t.is_output() { calc.n_t = Num::None; }
+        if calc.i_t.is_output() { calc.i_t = Num::None; }
 
         calc
     }
