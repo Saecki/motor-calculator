@@ -12,6 +12,7 @@ const METRIC_PREFIXES: [(&str, f64); 8] = [
     ("P", 1_000_000_000_000.0),
 ];
 
+/// A enum that holds either an input, output or no number at all.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Num {
     In(f64),
@@ -20,6 +21,7 @@ pub enum Num {
 }
 
 impl Num {
+    /// Returns true if the number is an input false otherwise.
     pub fn is_input(&self) -> bool {
         match self {
             Num::In(_) => true,
@@ -27,6 +29,7 @@ impl Num {
         }
     }
 
+    /// Returns true if the number is an output false otherwise.
     pub fn is_output(&self) -> bool {
         match self {
             Num::Out(_) => true,
@@ -34,6 +37,7 @@ impl Num {
         }
     }
 
+    /// Returns true if the number is none false otherwise.
     pub fn is_none(&self) -> bool {
         match self {
             Num::None => true,
@@ -41,6 +45,7 @@ impl Num {
         }
     }
 
+    /// Returns true if the number is an input or an output false otherwise.
     pub fn is_num(&self) -> bool {
         match self {
             Num::In(_) => true,
@@ -49,6 +54,7 @@ impl Num {
         }
     }
 
+    /// Returns the number as an option.
     pub fn as_option(&self) -> Option<f64> {
         match self {
             Num::In(v) => Some(*v),
@@ -66,6 +72,8 @@ impl Num {
         }
     }
 
+    /// Returns the number formatted as a string with a metric prefix and the specified number of
+    /// significant figures.
     pub fn display(&self, significant_figures: usize) -> String {
         if self.is_num() {
             let mut num = self.num();
@@ -92,6 +100,7 @@ impl Num {
         }
     }
 
+    /// Parses a number from the string.
     pub fn parse(str: impl Into<String>) -> Num {
         let mut s = str.into().replace(",", ".");
         let mut factor = 1.0;

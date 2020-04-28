@@ -3,6 +3,8 @@ use crate::calc::operation::Op;
 use crate::error::Error;
 use crate::error::ErrorKind::{Overconstrained, Underconstrained};
 
+/// A stucture representing a simple equation consisting of three variables and an operation. The
+/// variables are dependent in the pattern a operation b = c.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Equation {
     pub op: Op,
@@ -12,10 +14,14 @@ pub struct Equation {
 }
 
 impl Equation {
+    /// Creates a new equation containing the variables and the operation.
     pub fn new(a: Num, op: Op, b: Num, c: Num) -> Equation {
         Equation { op, a, b, c }
     }
 
+    /// Attempts to solve the equation by calculating the value of the remaining variable. Returns
+    /// a Error of kind Overconstrained if all 3 numbers a defined or Underconstrained if only one
+    /// was defined. Otherwise the solved equation is returned.
     pub fn solve(&self) -> crate::error::Result<Equation> {
         let mut equation = *self;
         let mut commutative = true;
@@ -30,7 +36,7 @@ impl Equation {
             commutative = false
         }
 
-        //rearrange
+        //rearrange and calculate
         if equation.a.is_num() && equation.b.is_num() {
             if equation.c.is_none() {
                 equation.c = Num::Out(equation.op.calc(equation.a.num(), equation.b.num()));

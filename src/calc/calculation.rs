@@ -32,10 +32,9 @@ pub struct Calculation {
     /// Motor speed: n<sub>M</sub> [rpm]
     pub n_m: Num,
 
+    // Transmission
     /// Transmission ratio: i [%]
     pub i_t: Num,
-
-    // Transmission
     /// Transmission power: P<sub>T</sub> [W]
     pub p_t: Num,
     /// Transmission power loss: P<sub>TL</sub> [W]
