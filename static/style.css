@@ -100,21 +100,21 @@ label {
     left: 0;
 }
 
-.p_ml_el {
+.p_m_l_el {
     position: absolute;
-    top: 80px;
+    top: 40px;
     left: 100px;
 }
 
-.p_ml_mech {
+.p_m_l_mech {
     position: absolute;
-    top: 80px;
+    top: 40px;
     left: 300px;
 }
 
-.p_ml {
+.p_m_l {
     position: absolute;
-    top: 160px;
+    top: 120px;
     left: 200px;
 }
 
@@ -136,21 +136,15 @@ label {
     left: 400px;
 }
 
-.i_t {
-    position: absolute;
-    top: 440px;
-    left: 400px;
-}
-
 .eta_m {
     position: absolute;
     top: 520px;
     left: 200px;
 }
 
-.p_tl {
+.p_t_l {
     position: absolute;
-    top: 160px;
+    top: 120px;
     left: 600px;
 }
 
@@ -170,6 +164,12 @@ label {
     position: absolute;
     top: 360px;
     left: 800px;
+}
+
+.i_t {
+    position: absolute;
+    top: 440px;
+    left: 600px;
 }
 
 .eta_t {

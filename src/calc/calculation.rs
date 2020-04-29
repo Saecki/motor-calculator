@@ -70,6 +70,7 @@ impl Calculation {
         }
     }
 
+    /// Attempts to fill the missing fields by calculating their values.
     pub fn try_fill_missing(&self) -> crate::error::Result<Calculation> {
         let mut calc = self.clear_output();
 
@@ -82,6 +83,7 @@ impl Calculation {
         Ok(calc)
     }
 
+    /// Attempts to calculate the missing values.
     pub fn calculate(&self) -> crate::error::Result<Calculation> {
         let mut calc = *self;
 
@@ -148,6 +150,7 @@ impl Calculation {
         Ok(calc)
     }
 
+    /// Sets all values that are of type Num::Out to Num::None.
     pub fn clear_output(&self) -> Self {
         let mut calc = *self;
 

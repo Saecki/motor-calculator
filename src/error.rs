@@ -6,6 +6,7 @@ pub enum ErrorKind {
     Underconstrained,
 }
 
+/// A structure able to represent errors resulting from solving equations.
 #[derive(Copy, Clone, Debug)]
 pub struct Error {
     pub kind: ErrorKind,
