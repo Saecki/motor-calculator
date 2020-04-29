@@ -33,7 +33,7 @@ pub struct Calculation {
     pub n_m: Num,
 
     // Transmission
-    /// Transmission ratio: i [%]
+    /// Transmission ratio: i
     pub i_t: Num,
     /// Transmission power: P<sub>T</sub> [W]
     pub p_t: Num,
@@ -141,9 +141,9 @@ impl Calculation {
             calc.p_t = eq.c;
         }
 
-        if let Ok(eq) = Equation::new(calc.n_m, Op::Mul, calc.i_t / 100.0, calc.n_t).solve() {
+        if let Ok(eq) = Equation::new(calc.n_m, Op::Mul, calc.i_t, calc.n_t).solve() {
             calc.n_m = eq.a;
-            calc.i_t = eq.b * 100.0;
+            calc.i_t = eq.b;
             calc.n_t = eq.c;
         }
 

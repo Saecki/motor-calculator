@@ -59,7 +59,7 @@ impl Component for Model {
                     "eta_t" => self.calc.eta_t = Num::parse(s),
                     "m_t" => self.calc.m_t = Num::parse(s),
                     "n_t" => self.calc.n_t = Num::parse(s),
-                    "i_t" => self.calc.i_t = Num::parse(s),
+                    "i_t" => self.calc.i_t = Num::parse_ratio(s),
                     _ => (),
                 }
 
@@ -81,87 +81,87 @@ impl Component for Model {
         let u = self.field(
             "u", "U", "", "V",
             "Voltage",
-            self.calc.u);
+            self.calc.u, self.calc.u.display(self.significant_figures));
 
         let i = self.field(
             "i", "I", "", "A",
             "Current",
-            self.calc.i);
+            self.calc.i, self.calc.i.display(self.significant_figures));
 
         let r_a = self.field(
             "r_a", "R", "A", "Ω",
             "Armature resistance",
-            self.calc.r_a);
+            self.calc.r_a, self.calc.r_a.display(self.significant_figures));
 
         let p_in = self.field(
             "p_in", "P", "In", "W",
             "Input power",
-            self.calc.p_in);
+            self.calc.p_in, self.calc.p_in.display(self.significant_figures));
 
         let p_m = self.field(
             "p_m", "P", "M", "W",
             "Motor power",
-            self.calc.p_m);
+            self.calc.p_m, self.calc.p_m.display(self.significant_figures));
 
         let p_m_l = self.field(
             "p_m_l", "P", "ML", "W",
             "Motor power loss",
-            self.calc.p_m_l);
+            self.calc.p_m_l, self.calc.p_m_l.display(self.significant_figures));
 
         let p_m_l_el = self.field(
             "p_m_l_el", "P", "ML_el", "W",
             "Electrical motor power loss",
-            self.calc.p_m_l_el);
+            self.calc.p_m_l_el, self.calc.p_m_l_el.display(self.significant_figures));
 
         let p_m_l_mech = self.field(
             "p_m_l_mech", "P", "ML_mech", "W",
             "Mechanical motor power loss",
-            self.calc.p_m_l_mech);
+            self.calc.p_m_l_mech, self.calc.p_m_l_mech.display(self.significant_figures));
 
         let eta_m = self.field(
             "eta_m", "η", "M", "%",
             "Motor efficiency",
-            self.calc.eta_m);
+            self.calc.eta_m, self.calc.eta_m.display(self.significant_figures));
 
         let m_m = self.field(
             "m_m", "M", "M", "Nm",
             "Motor torque",
-            self.calc.m_m);
+            self.calc.m_m, self.calc.m_m.display(self.significant_figures));
 
         let n_m = self.field(
             "n_m", "n", "M", "rpm",
             "Motor speed",
-            self.calc.n_m);
+            self.calc.n_m, self.calc.n_m.display(self.significant_figures));
 
         let i_t = self.field(
-            "i_t", "i", "", "%",
+            "i_t", "i", "", "",
             "Transmission ratio",
-            self.calc.i_t);
+            self.calc.i_t, self.calc.i_t.display_ratio());
 
         let p_t = self.field(
             "p_t", "P", "T", "W",
             "Transmission power",
-            self.calc.p_t);
+            self.calc.p_t, self.calc.p_t.display(self.significant_figures));
 
         let p_t_l = self.field(
             "p_t_l", "P", "TL", "W",
             "Transmission power loss",
-            self.calc.p_t_l);
+            self.calc.p_t_l, self.calc.p_t_l.display(self.significant_figures));
 
         let eta_t = self.field(
             "eta_t", "η", "T", "%",
             "Transmission efficiency",
-            self.calc.eta_t);
+            self.calc.eta_t, self.calc.eta_t.display(self.significant_figures));
 
         let m_t = self.field(
             "m_t", "M", "T", "Nm",
             "Transmission torque",
-            self.calc.m_t);
+            self.calc.m_t, self.calc.m_t.display(self.significant_figures));
 
         let n_t = self.field(
             "n_t", "n", "T", "rpm",
             "Transmission speed",
-            self.calc.n_t);
+            self.calc.n_t, self.calc.n_t.display(self.significant_figures));
 
         html! {
             <div class="motorcalc">
@@ -180,12 +180,12 @@ impl Component for Model {
                     { p_m }
                     { m_m }
                     { n_m }
-                    { i_t }
                     { eta_m }
                     { p_t_l }
                     { p_t }
                     { m_t }
                     { n_t }
+                    { i_t }
                     { eta_t }
                 </div>
             </div>
@@ -195,12 +195,12 @@ impl Component for Model {
 
 impl Model {
     /// Returns html representing an input field it's label and a output text span.
-    pub fn field(&self, id: &'static str, label: &str, sub_label: &str, unit: &str, description: &str, num: Num) -> Html {
+    pub fn field(&self, id: &'static str, label: &str, sub_label: &str, unit: &str, description: &str, num: Num, display: String) -> Html {
         html! {
             <div class={ id } >
                 <label for={ id }
                     title={ description }>
-                    { label }<sub>{ sub_label }</sub>{ format!(" [{}]", unit) }
+                    { label }<sub>{ sub_label }</sub>{ if unit.len() == 0 { "".into() } else { format!(" [{}]", unit) } }
                 </label>
                 <div class="input-output">
                     <input class="edit"
@@ -209,7 +209,7 @@ impl Model {
                         oninput=self.link.callback(move |e: InputData| Msg::Calc(id, e.value))
                         disabled={ num.is_output() }
                         />
-                    <span class="display">{ if num.is_output() { num.display(self.significant_figures) } else { "".into() } }</span>
+                    <span class="display">{ if num.is_output() { display } else { "".into() } }</span>
                 </div>
             </div>
         }

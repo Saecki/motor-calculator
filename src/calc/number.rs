@@ -100,6 +100,26 @@ impl Num {
         }
     }
 
+    pub fn display_ratio(&self) -> String {
+        if self.is_num() {
+            let num = self.num();
+            let mut temp = self.num();
+            let mut a = 1;
+            let b;
+
+            while temp.fract() > 0.0001 && temp.fract() < 0.9999 {
+                a += 1;
+                temp += num;
+            }
+
+            b = temp.round() as i32;
+
+            format!("{}:{}", a, b)
+        } else {
+            String::new()
+        }
+    }
+
     /// Parses a number from the string.
     pub fn parse(str: impl Into<String>) -> Num {
         let mut s = str.into().replace(",", ".");
@@ -117,6 +137,21 @@ impl Num {
 
         if let Ok(v) = s.parse::<f64>() {
             Num::In(v * factor)
+        } else {
+            Num::None
+        }
+    }
+
+    pub fn parse_ratio(str: impl Into<String>) -> Num {
+        let s = str.into().replace(",", ".");
+        let parts = s.split(":").collect::<Vec<&str>>();
+        let a;
+        let b;
+
+        if parts.len() == 2 {
+            a = Self::parse(parts[0]);
+            b = Self::parse(parts[1]);
+            b / a
         } else {
             Num::None
         }
