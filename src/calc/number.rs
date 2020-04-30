@@ -104,15 +104,15 @@ impl Num {
         if self.is_num() {
             let num = self.num();
             let mut temp = self.num();
-            let mut a = 1;
-            let b;
+            let mut a: i64 = 1;
+            let b: i64;
 
             while temp.fract() > 0.0001 && temp.fract() < 0.9999 {
                 a += 1;
                 temp += num;
             }
 
-            b = temp.round() as i32;
+            b = temp.round() as i64;
 
             format!("{}:{}", a, b)
         } else {
