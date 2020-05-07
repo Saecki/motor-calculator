@@ -87,14 +87,18 @@ impl Calculation {
     pub fn calculate(&self) -> crate::error::Result<Calculation> {
         let mut calc = *self;
 
-        if let Ok(eq) = Equation::new(calc.u, Op::Mul, calc.i, calc.p_in).solve() {
-            calc.u = eq.a;
-            calc.i = eq.b;
-            calc.p_in = eq.c;
-        }
+        Equation::solve_and_assign(&mut calc.u, Op::Mul, &mut calc.i, &mut calc.p_in);
+
+        Equation::solve_and_assign(&mut calc.p_m_l, Op::Add, &mut calc.p_m, &mut calc.p_in);
+
+        Equation::solve_and_assign(&mut calc.p_m_l_el, Op::Add, &mut calc.p_m_l_mech, &mut calc.p_m_l);
+
+        Equation::solve_and_assign(&mut calc.p_t, Op::Add, &mut calc.p_t_l, &mut calc.p_m);
+
+        Equation::solve_and_assign(&mut calc.n_m, Op::Mul, &mut calc.i_t, &mut calc.n_t);
 
         if let Ok(eq) = Equation::new(calc.i * calc.i, Op::Mul, calc.r_a, calc.p_m_l_el).solve() {
-            calc.i = eq.a / calc.i;
+            calc.i = eq.a.sqrt();
             calc.r_a = eq.b;
             calc.p_m_l_el = eq.c;
         }
@@ -103,18 +107,6 @@ impl Calculation {
             calc.p_in = eq.a;
             calc.eta_m = eq.b * 100.0;
             calc.p_m = eq.c;
-        }
-
-        if let Ok(eq) = Equation::new(calc.p_m_l, Op::Add, calc.p_m, calc.p_in).solve() {
-            calc.p_m_l = eq.a;
-            calc.p_m = eq.b;
-            calc.p_in = eq.c;
-        }
-
-        if let Ok(eq) = Equation::new(calc.p_m_l_el, Op::Add, calc.p_m_l_mech, calc.p_m_l).solve() {
-            calc.p_m_l_el = eq.a;
-            calc.p_m_l_mech = eq.b;
-            calc.p_m_l = eq.c;
         }
 
         if let Ok(eq) = Equation::new(calc.n_m * (2.0 * PI / 60.0), Op::Mul, calc.m_m, calc.p_m).solve() {
@@ -129,22 +121,10 @@ impl Calculation {
             calc.p_t = eq.c;
         }
 
-        if let Ok(eq) = Equation::new(calc.p_t, Op::Add, calc.p_t_l, calc.p_m).solve() {
-            calc.p_t = eq.a;
-            calc.p_t_l = eq.b;
-            calc.p_m = eq.c;
-        }
-
         if let Ok(eq) = Equation::new(calc.n_t * (2.0 * PI / 60.0), Op::Mul, calc.m_t, calc.p_t).solve() {
             calc.n_t = eq.a / (2.0 * PI / 60.0);
             calc.m_t = eq.b;
             calc.p_t = eq.c;
-        }
-
-        if let Ok(eq) = Equation::new(calc.n_m, Op::Mul, calc.i_t, calc.n_t).solve() {
-            calc.n_m = eq.a;
-            calc.i_t = eq.b;
-            calc.n_t = eq.c;
         }
 
         Ok(calc)
@@ -165,12 +145,12 @@ impl Calculation {
         if calc.eta_m.is_output() { calc.eta_m = Num::None; }
         if calc.m_m.is_output() { calc.m_m = Num::None; }
         if calc.n_m.is_output() { calc.n_m = Num::None; }
+        if calc.i_t.is_output() { calc.i_t = Num::None; }
         if calc.p_t.is_output() { calc.p_t = Num::None; }
         if calc.p_t_l.is_output() { calc.p_t_l = Num::None; }
         if calc.eta_t.is_output() { calc.eta_t = Num::None; }
         if calc.m_t.is_output() { calc.m_t = Num::None; }
         if calc.n_t.is_output() { calc.n_t = Num::None; }
-        if calc.i_t.is_output() { calc.i_t = Num::None; }
 
         calc
     }

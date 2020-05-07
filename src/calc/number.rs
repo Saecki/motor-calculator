@@ -1,15 +1,17 @@
 use std::ops::{Add, Div, Mul, Sub};
 
 /// Metric prefix and the factor.
-const METRIC_PREFIXES: [(&str, f64); 8] = [
-    ("p", 0.000_000_000_001),
-    ("n", 0.000_000_001),
-    ("µu", 0.000_001),
-    ("m", 0.001),
-    ("k", 1_000.0),
-    ("M", 1_000_000.0),
-    ("G", 1_000_000_000.0),
-    ("P", 1_000_000_000_000.0),
+const METRIC_PREFIXES: [(&str, i32); 10] = [
+    ("f", -15),
+    ("p", -12),
+    ("n", -9),
+    ("µu", -6),
+    ("m", -3),
+    ("k", 3),
+    ("M", 6),
+    ("G", 9),
+    ("T", 12),
+    ("P", 15),
 ];
 
 /// A enum that holds either an input, output or no number at all.
@@ -72,6 +74,15 @@ impl Num {
         }
     }
 
+    /// Returns the numbers square root.
+    pub fn sqrt(&self) -> Self {
+        match self {
+            Num::In(v) => Num::In(v.sqrt()),
+            Num::Out(v) => Num::Out(v.sqrt()),
+            Num::None => Num::None,
+        }
+    }
+
     /// Returns the number formatted as a string with a metric prefix and the specified number of
     /// significant figures.
     pub fn display(&self, significant_figures: usize) -> String {
@@ -80,8 +91,10 @@ impl Num {
             let mut metric_prefix = ' ';
 
             for m in &METRIC_PREFIXES {
-                if num / m.1 >= 1.0 && num / m.1 < 1000.0 {
-                    num = num / m.1;
+                let factor = 10_f64.powi(m.1);
+
+                if num.abs() / factor >= 1.0 && num.abs() / factor < 1000.0 {
+                    num /= factor;
                     metric_prefix = m.0.chars().next().unwrap();
                     break;
                 }
@@ -100,6 +113,7 @@ impl Num {
         }
     }
 
+    /// Returns the number formatted as a ratio string.
     pub fn display_ratio(&self) -> String {
         if self.is_num() {
             let num = self.num();
@@ -121,7 +135,7 @@ impl Num {
     }
 
     /// Parses a number from the string.
-    pub fn parse(str: impl Into<String>) -> Num {
+    pub fn parse(str: impl Into<String>) -> Self {
         let mut s = str.into().replace(",", ".");
         let mut factor = 1.0;
 
@@ -129,7 +143,7 @@ impl Num {
             for c in m.0.chars() {
                 if s.ends_with(c) {
                     s.pop();
-                    factor = m.1;
+                    factor = 10_f64.powi(m.1);
                     break 'outer;
                 }
             }
@@ -142,7 +156,8 @@ impl Num {
         }
     }
 
-    pub fn parse_ratio(str: impl Into<String>) -> Num {
+    /// Parses a number from the ratio string.
+    pub fn parse_ratio(str: impl Into<String>) -> Self {
         let s = str.into().replace(",", ".");
         let parts = s.split(":").collect::<Vec<&str>>();
         let a;

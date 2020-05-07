@@ -79,6 +79,14 @@ impl Equation {
 
         Ok(equation)
     }
+
+    pub fn solve_and_assign(a: &mut Num, op: Op, b: &mut Num, c: &mut Num) {
+        if let Ok(eq) = Equation::new(*a, op, *b, *c).solve() {
+            *a = eq.a;
+            *b = eq.b;
+            *c = eq.c;
+        }
+    }
 }
 
 #[cfg(test)]
